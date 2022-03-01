@@ -23,6 +23,10 @@ inputs:
     required: false
     description: 'Whether or not to create a pull request.'
     default: 'true'
+  target_ref:
+    required: false
+    description: 'pull request base (defaults to master).  Only used if creating a PR.'
+    default: 'master'
 outputs:
   release_tag:
     description: release git tag (with version prefix)
@@ -100,5 +104,5 @@ runs:
         GITHUB_TOKEN: "${{ inputs.github_token }}"
         BRANCH_PREFIX: "release/"
         PULL_REQUEST_FROM_BRANCH: "${{ steps.validate.outputs.release_branch }}"
-        PULL_REQUEST_BRANCH: "master"
+        PULL_REQUEST_BRANCH: "${{ inputs.target_ref }}"
         PULL_REQUEST_TITLE: "Release ${{ steps.validate.outputs.release_tag }}"
