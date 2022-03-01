@@ -1,0 +1,98 @@
+name: 'DuploCloud Start Release'
+description: 'Starts a gitflow release'
+author: 'DuploCloud, Inc.'
+inputs:
+  version:
+    required: true
+    description: 'The release version (without any leading prefix)'
+  tag_prefix:
+    required: true
+    description: 'The tag prefix (defaults to "v")'
+    default: 'v'
+  github_token:
+    required: true
+    description: 'Github token to use for pushing and creating the PR'
+  precommit_run:
+    required: false
+    description: 'Shell commands to run prior to making release commit.  If no commands are given, no commit will be made.'
+  commit_message:
+    required: false
+    description: 'Commit message to use for the release commit.  If no precommit_run is given, no commit will be made.'
+    default: '[release] version bump'
+  create_pr:
+    required: false
+    description: 'Whether or not to create a pull request.'
+    default: 'true'
+outputs:
+  release_tag:
+    description: release git tag (with version prefix)
+    value: "${{ steps.validate.outputs.release_tag }}"
+  release_branch:
+    description: release git branch
+    value: "${{ steps.validate.outputs.release_branch }}"
+runs:
+  using: 'composite'
+  steps:
+
+    # VALIDATION:  This check validates that no existing release tag or branch exists.
+    #   - Check the specific release tag to make sure it is missing
+    #   - Check the specific release branch to make sure it is missing
+    #   - Check the specific hotfix branch to make sure it is missing
+    - id: validate
+      shell: bash
+      run: |
+        # Fail on errors, and strictly interpret shell code
+        set -eu
+
+        # Perform sanity checks
+        if git rev-parse "$RELEASE_TAG" >/dev/null 2>&1; then
+          echo "::error invalid version: ${{ inputs.version }}: tag '$RELEASE_TAG' already exists"
+          exit 1
+        elif git rev-parse "$RELEASE_BRANCH" >/dev/null 2>&1; then
+          echo "::error invalid version: ${{ inputs.version }}: branch '$RELEASE_BRANCH' already exists"
+          exit 1
+        elif git rev-parse "$HOTFIX_BRANCH" >/dev/null 2>&1; then
+          echo "::error invalid version: ${{ inputs.version }}: branch '$HOTFIX_BRANCH' exists"
+          exit 1
+        fi
+
+        # Outputs
+        echo "::set-output name=release_tag::$RELEASE_TAG"
+        echo "::set-output name=release_branch::$RELEASE_BRANCH"
+      env:
+        RELEASE_TAG: "${{ inputs.tag_prefix }}${{ inputs.version }}"
+        RELEASE_BRANCH: "release/${{ inputs.version }}"
+        HOTFIX_BRANCH: "hotfix/${{ inputs.version }}"
+
+    # CREATE BRANCH
+    - id: create-branch
+      shell: bash
+      run: git checkout -b "${{ steps.validate.outputs.release_branch }}"
+    
+    # COMMIT CHANGES (if any)
+    - id: precommit-run
+      if: "${{ inputs.precommit_run != '' }}"
+      shell: bash
+      run: "${{ inputs.precommit_run }}"
+    - id: commit
+      if: "${{ inputs.precommit_run != '' }}"
+      shell: bash
+      run: git add . && git commit -am '${{ inputs.commit_message }}'
+    
+    # PUSH BRANCH
+    - name: Push the release branch
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: "${{ inputs.github_token }}"
+        branch: "${{ steps.validate.outputs.release_branch }}"
+    
+    # CREATE A PR
+    - id: create-pr
+      if: "${{ inputs.create_pr }}"
+      uses: vsoch/pull-request-action@1.0.18
+      env:
+        GITHUB_TOKEN: "${{ inputs.github_token }}"
+        BRANCH_PREFIX: "release/"
+        PULL_REQUEST_FROM_BRANCH: "${{ steps.validate.outputs.release_branch }}"
+        PULL_REQUEST_BRANCH: "master"
+        PULL_REQUEST_TITLE: "Release ${{ steps.validate.outputs.release_tag }}"
