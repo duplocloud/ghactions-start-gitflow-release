@@ -58,7 +58,7 @@ jobs:
 
           current="$(cat VERSION)"
           bump="$(( ${current##*.} + 1))"
-          prefix="${current%.*}""
+          prefix="${current%.*}"
 
           echo "${prefix}.${bump}" >VERSION
           git commit -am 'version bump' VERSION
