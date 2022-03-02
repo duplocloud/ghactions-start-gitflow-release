@@ -14,7 +14,7 @@ inputs:
     description: 'Github token to use for pushing and creating the PR'
   precommit_run:
     required: false
-    description: 'Shell commands to run prior to making release commit.  If no commands are given, no commit will be made.'
+    description: 'Shell commands to run prior to making release commit.  If no changes are made, no commit will be made.'
   commit_message:
     required: false
     description: 'Commit message to use for the release commit.  If no precommit_run is given, no commit will be made.'
@@ -87,7 +87,14 @@ runs:
     - id: commit
       if: "${{ inputs.precommit_run != '' }}"
       shell: bash
-      run: git add . && git commit -am '${{ inputs.commit_message }}'
+      run: |
+        # Fail on errors, and strictly interpret shell code
+        set -eu
+
+        # If changes were made, commit them.
+        if ! git diff --quiet; then
+          git add . && git commit -am '${{ inputs.commit_message }}'
+        fi
     
     # PUSH BRANCH
     - name: Push the release branch
