@@ -61,5 +61,5 @@ jobs:
           prefix="${current%.*}""
 
           echo "${prefix}.${bump}" >VERSION
-          git commit -am 'versino bump' VERSION
+          git commit -am 'version bump' VERSION
           git push
