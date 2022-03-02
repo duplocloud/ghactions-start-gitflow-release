@@ -48,8 +48,6 @@ jobs:
 
 ## Inputs
 
-Unlike standard actions, this action just uses variables from the environment.
-
 | Name | Description | Required | Default |
 |------|-------------|----------|---------|
 | version | The release version (without any leading prefix) | true | unset |
