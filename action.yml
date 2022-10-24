@@ -67,8 +67,8 @@ runs:
         fi
 
         # Outputs
-        echo "::set-output name=release_tag::$RELEASE_TAG"
-        echo "::set-output name=release_branch::$RELEASE_BRANCH"
+        echo "release_tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
+        echo "release_branch=$RELEASE_BRANCH" >> $GITHUB_OUTPUT
       env:
         RELEASE_TAG: "${{ inputs.tag_prefix }}${{ inputs.version }}"
         RELEASE_BRANCH: "release/${{ inputs.version }}"
@@ -106,7 +106,7 @@ runs:
     # CREATE A PR
     - id: create-pr
       if: "${{ inputs.create_pr }}"
-      uses: vsoch/pull-request-action@1.0.18
+      uses: vsoch/pull-request-action@1.0.21
       env:
         GITHUB_TOKEN: "${{ inputs.github_token }}"
         BRANCH_PREFIX: "release/"
