@@ -106,7 +106,7 @@ runs:
     # CREATE A PR
     - id: create-pr
       if: "${{ inputs.create_pr }}"
-      uses: vsoch/pull-request-action@1.0.21
+      uses: vsoch/pull-request-action@1.1.0
       env:
         GITHUB_TOKEN: "${{ inputs.github_token }}"
         BRANCH_PREFIX: "release/"
