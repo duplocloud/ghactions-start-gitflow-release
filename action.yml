@@ -27,6 +27,10 @@ inputs:
     required: false
     description: 'pull request base (defaults to master).  Only used if creating a PR.'
     default: 'master'
+  is_hotfix:
+    required: false
+    description: 'Whether or not pipeline triggered from hotfix.'
+    default: 'false'
 outputs:
   release_tag:
     description: release git tag (with version prefix)
@@ -69,6 +73,7 @@ runs:
         # Outputs
         echo "release_tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
         echo "release_branch=$RELEASE_BRANCH" >> $GITHUB_OUTPUT
+        echo "hotfix_branch=$HOTFIX_BRANCH" >> $GITHUB_OUTPUT
       env:
         RELEASE_TAG: "${{ inputs.tag_prefix }}${{ inputs.version }}"
         RELEASE_BRANCH: "release/${{ inputs.version }}"
@@ -77,7 +82,7 @@ runs:
     # CREATE BRANCH
     - id: create-branch
       shell: bash
-      run: git checkout -b "${{ steps.validate.outputs.release_branch }}"
+      run: git checkout -b "${{ inputs.is_hotfix && steps.validate.outputs.hotfix_branch || steps.validate.outputs.release_branch }}"
     
     # COMMIT CHANGES (if any)
     - id: precommit-run
@@ -101,7 +106,7 @@ runs:
       uses: ad-m/github-push-action@master
       with:
         github_token: "${{ inputs.github_token }}"
-        branch: "${{ steps.validate.outputs.release_branch }}"
+        branch: "${{ inputs.is_hotfix && steps.validate.outputs.hotfix_branch || steps.validate.outputs.release_branch }}"
     
     # CREATE A PR
     - id: create-pr
@@ -109,7 +114,7 @@ runs:
       uses: vsoch/pull-request-action@1.1.0
       env:
         GITHUB_TOKEN: "${{ inputs.github_token }}"
-        BRANCH_PREFIX: "release/"
-        PULL_REQUEST_FROM_BRANCH: "${{ steps.validate.outputs.release_branch }}"
+        BRANCH_PREFIX: "${{ inputs.is_hotfix && hotfix/ || release/ }}"
+        PULL_REQUEST_FROM_BRANCH: "${{ inputs.is_hotfix && steps.validate.outputs.hotfix_branch || steps.validate.outputs.release_branch }}"
         PULL_REQUEST_BRANCH: "${{ inputs.target_ref }}"
         PULL_REQUEST_TITLE: "Release ${{ steps.validate.outputs.release_tag }}"
