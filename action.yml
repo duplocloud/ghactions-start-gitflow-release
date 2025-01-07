@@ -117,4 +117,4 @@ runs:
         BRANCH_PREFIX: "${{ inputs.is_hotfix && 'hotfix/' || 'release/' }}"
         PULL_REQUEST_FROM_BRANCH: "${{ inputs.is_hotfix && steps.validate.outputs.hotfix_branch || steps.validate.outputs.release_branch }}"
         PULL_REQUEST_BRANCH: "${{ inputs.target_ref }}"
-        PULL_REQUEST_TITLE: "Release ${{ steps.validate.outputs.release_tag }}"
+        PULL_REQUEST_TITLE: "${{ inputs.is_hotfix && 'Hotfix Release' || 'Release' }} ${{ steps.validate.outputs.release_tag }}"
