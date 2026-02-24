@@ -106,7 +106,7 @@ runs:
       uses: ad-m/github-push-action@master
       with:
         github_token: "${{ inputs.github_token }}"
-        branch: "${{ inputs.is_hotfix && steps.validate.outputs.hotfix_branch || steps.validate.outputs.release_branch }}"
+        branch: "${{ inputs.is_hotfix == 'true' && steps.validate.outputs.hotfix_branch || steps.validate.outputs.release_branch }}"
     
     # CREATE A PR
     - id: create-pr
@@ -114,7 +114,7 @@ runs:
       uses: vsoch/pull-request-action@1.1.0
       env:
         GITHUB_TOKEN: "${{ inputs.github_token }}"
-        BRANCH_PREFIX: "${{ inputs.is_hotfix && 'hotfix/' || 'release/' }}"
-        PULL_REQUEST_FROM_BRANCH: "${{ inputs.is_hotfix && steps.validate.outputs.hotfix_branch || steps.validate.outputs.release_branch }}"
+        BRANCH_PREFIX: "${{ inputs.is_hotfix == 'true' && 'hotfix/' || 'release/' }}"
+        PULL_REQUEST_FROM_BRANCH: "${{ inputs.is_hotfix == 'true' && steps.validate.outputs.hotfix_branch || steps.validate.outputs.release_branch }}"
         PULL_REQUEST_BRANCH: "${{ inputs.target_ref }}"
-        PULL_REQUEST_TITLE: "${{ inputs.is_hotfix && 'Hotfix Release' || 'Release' }} ${{ steps.validate.outputs.release_tag }}"
+        PULL_REQUEST_TITLE: "${{ inputs.is_hotfix == 'true' && 'Hotfix Release' || 'Release' }} ${{ steps.validate.outputs.release_tag }}"
