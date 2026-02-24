@@ -82,7 +82,7 @@ runs:
     # CREATE BRANCH
     - id: create-branch
       shell: bash
-      run: git checkout -b "${{ inputs.is_hotfix && steps.validate.outputs.hotfix_branch || steps.validate.outputs.release_branch }}"
+      run: git checkout -b "${{ inputs.is_hotfix == 'true' && steps.validate.outputs.hotfix_branch || steps.validate.outputs.release_branch }}"
     
     # COMMIT CHANGES (if any)
     - id: precommit-run
